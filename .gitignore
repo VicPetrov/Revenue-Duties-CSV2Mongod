@@ -1,3 +1,14 @@
+UML-Diagrams/**
+**/cord.toml
+**/validation.ini
+# Ignore dynaconf secret files
+.secrets.*
+**/validation_config.py
+**/spoof.ini
+**/__pycache__/*
+*.log
+output*.json
+.vscode/settings.json
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
