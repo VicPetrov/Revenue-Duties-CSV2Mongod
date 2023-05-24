@@ -1,2 +1,2 @@
-# waybill-declaration_parsing_models
+# FAST API Pydantic Waybill Parsing
 Parsing Practice for Django/FastAPI ETL
