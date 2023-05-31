@@ -38,18 +38,18 @@ class ClearanceStatement(Paper):
 
 
     statement_id: Optional[str] = Field(...,
-                                        regex=settings.statement_id_pattern)
+                                        regex=settings.statement_id_pattern) # type: ignore
     statement_date: Union[datetime.datetime, Annotated[str, Field(
-        regex="^"+settings.statement_date_format+"$")]]
+        regex="^"+settings.statement_date_format+"$")]] # type: ignore
     declarant: Union[Entity, dict, None]  # len 3
-    recieving: Union[StatementEntity, dict, None]  # len 2
+    receiving: Union[StatementEntity, dict, None]  # type: ignore # len 2
     # title is given to exclude it from being referenced in a list collapsing function
     mode_of_operation: auto_enum("StatementModeOfOperation",
-                                 settings.statement_mode) = Field(title="Mode of Operation")
+                                 settings.statement_mode) = Field(title="Mode of Operation") # type: ignore
     item_name: Union[List[str], str, None]
-    feacn_code: Union[str, int] = Field(min_length=settings.feacn_length)
+    feacn_code: Union[str, int] = Field(min_length=settings.feacn_length) # type: ignore
     #min_length is for strings only
-    invoice: Union[StatementInvoiceAmount, dict, None]
+    invoice: Union[StatementInvoiceAmount, dict, None] # type: ignore
     cost_in_rubles: Union[float, str]
     item_weight: Union[float, str]
     delivery_contract: Optional[str]
@@ -61,7 +61,7 @@ class ClearanceStatement(Paper):
     @validator("statement_id")
     def statement_id_validation(cls, v: Any):
         #! Hopefully fixed?
-        match = re.match(settings.statement_id_pattern, v)
+        match = re.match(settings.statement_id_pattern, v) # type: ignore
         try:
             new_v = date_validation(day=int(1),
                                     month=int(1),
@@ -73,7 +73,7 @@ class ClearanceStatement(Paper):
 
     @validator("statement_date")
     def statement_date_check(cls, v: Any):
-        match = re.match(settings.statement_date_format, v)
+        match = re.match(settings.statement_date_format, v) # type: ignore
         if match:
             new_v = date_validation(day=int(match.group("day")),
                                     month=int(match.group("month")),

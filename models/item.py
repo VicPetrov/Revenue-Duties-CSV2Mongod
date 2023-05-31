@@ -8,13 +8,13 @@ from models.document import Document
 
 
 class Item(BaseModel):
-    feacn_code: Optional[str] = Field("", title="feacn_code",  max_length=settings.FEACN_LENGTH) 
+    feacn_code: Optional[str] = Field("", title="feacn_code",  max_length=settings.FEACN_LENGTH)  # type: ignore
     procedure: str = Field(..., title="procedure")
     parent: Optional[str] = Field("", title="parent")
     item_price: Union[float, str, None] = Field(..., title="", alias="price")
     documents: Optional[Document] = Field(None, title="documents")
 
-WaybillItem = reorder_fields(model=Item,
+WaybillItem = reorder_fields(model=Item, # type: ignore
                              order=[
                                  "feacn_code",
                                  "item_price"

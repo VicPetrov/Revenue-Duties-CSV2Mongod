@@ -1,13 +1,4 @@
-import pandas as pd
-
-from sys import path
-import os, pathlib
-os.environ["PYTHONUTF8"] = "1"
-for py in pathlib.Path().glob("**/*.py"):
-    path.insert(1, str(py.parent))
-
-
-from paper import Paper, PaperCollection
+from models.paper import Paper, PaperCollection
 
 
 class ClassOne(Paper):
@@ -21,22 +12,16 @@ class ClassTwo(Paper):
 t = ClassTwo(one=ClassOne(id=1, p="One"), name="Two")
 
 def test_flattening():
-    counter = 0; 
-    for value in t.flat_values():
-        print(value)
-        counter+=1
-    assert counter == 3
+    # count the # of yeilds from flat_values generator
+    assert sum(1 for value in t.flat_values()) == 3
 
 def test_key_flattening():
-    counter = 0;
-    for key in t.flat_keys():
-        print(key)
-        counter+=1
-    assert counter == 3
+    # count the # of yeilds from flat_keys generator
+    assert sum(1 for value in t.flat_keys()) == 3
 
 def test_paper_collection():
     l = list([t for _ in range(0, 10)])
     print(l)
-    coll = PaperCollection(paper_list=l)
+    coll = PaperCollection(paper_list=l) # type: ignore
     print (coll.to_dataframe())
     

@@ -17,19 +17,19 @@ class Waybill(Paper):
     crossed_at: Union[datetime.datetime, datetime.date, None] = Field(title="Date of crossing the border")
     contract: str = Field("", title="Purchase contract")
     specification: str = Field("", title="Item Specifications")
-    seller: reorder_fields(model=Entity, order=["name","address", "tax_payer_id"]) = Field(title="Seller Entity")#3
+    seller: reorder_fields(model=Entity, order=["name","address", "tax_payer_id"]) = Field(title="Seller Entity")# type: ignore #3
     seller_bank: str = Field("", title="Seller's Bank")
     sender_name: str = Field("", title="Sneder's Name")
     sender_tax_payer_id: str = Field("", title="Sender's Tax Payer ID")
     sender_cargo_handling_terminal: str = Field("", title="Sender's Terminal")
-    buyer: reorder_fields(model=Entity, order=["name", "tax_payer_id", "address"]) = Field(title="Buyer Entitiy")#3
+    buyer: reorder_fields(model=Entity, order=["name", "tax_payer_id", "address"]) = Field(title="Buyer Entitiy")# type: ignore #3
     buyer_bank: str = Field(title="Buyer's Bank")
-    reciever_name: str = Field(title="Reciever's Name")
-    reciever_tax_payer_id: str = Field(title="Reciever's Tax Payer ID")
-    reciever_cargo_handling_terminal: str = Field(title="Reciever's Terminal")
+    receiver_name: str = Field(title="Receiver's Name")
+    receiver_tax_payer_id: str = Field(title="Receiver's Tax Payer ID")
+    receiver_cargo_handling_terminal: str = Field(title="Receiver's Terminal")
     currency: str = Field(title="Currency of Contract")
     item_name: str = Field(title="Name of Item")
-    item: WaybillItem = Field(title="Item object") #2
+    item: WaybillItem = Field(title="Item object") # type: ignore #2
     price_in_national_currency: Union[str, float, None] = Field(None, title="Price in Roubles")
     correction_date: Union[datetime.date, datetime.datetime, None] = Field(None, title="Date of Correction")
     global_unique_identifier: str = Field(title="GUID")
@@ -39,9 +39,9 @@ class Waybill(Paper):
         if v == "":
             return None
         try:
-            d, m, y = re.match(settings.WAYBILL_REGISTRATION_DATE_REGEX, v).groupdict().values()
+            d, m, y = re.match(settings.WAYBILL_REGISTRATION_DATE_REGEX, v).groupdict().values() # type: ignore
         except Exception as e:
-            raise ValueError(settings.waybill_registration_date_failed_msg.format(**{"v":v})+f"\tОписание ошибки: \n\n{e}")
+            raise ValueError(settings.waybill_registration_date_failed_msg.format(**{"v":v})+f"\tОписание ошибки: \n\n{e}") # type: ignore
         return datetime.datetime(
             day=int(d),
             month=int(m),

@@ -21,7 +21,9 @@ from enum import Enum
 from models.logic.pydantic_helper import auto_enum
 from application.configuration_handling import settings
 
-if settings.declaration_types_allow_list is None:
+try:
+    assert settings.declaration_types_allow_list != None
+except:
     class DeclarationTypesEnum(str, Enum):
 
         export_full = "ЭК10"
@@ -44,4 +46,4 @@ if settings.declaration_types_allow_list is None:
 else:
     # Generate from config, replacing meaningful names with transliterated ones.
     DeclarationTypesEnum = auto_enum(
-        "DeclarationTypesEnum", settings.declaration_types_allow_list)
+        "DeclarationTypesEnum", settings.declaration_types_allow_list) # type: ignore

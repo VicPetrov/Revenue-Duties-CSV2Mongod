@@ -43,7 +43,7 @@ def pop_into_dict(x: dict, l: list[str], i: int = 0) -> dict:
     return return_value
 
 
-def find_references(properties, count=-1, ret=dict()) -> Union[dict, list]:
+def find_references(properties, count=-1, ret=dict()) -> Union[dict, list, None]:
     """walks dict recursively, finding all object references"""
     #! wrote this by making mindless tweaks in debug mode until it worked,— there is room for optimisation!
 
@@ -88,8 +88,8 @@ def find_definitions(definitions: dict, ret: dict = dict()) -> dict:
 
 
 def reorder_fields(model: BaseModel, order: list) -> BaseModel:
-    new_model = create_model(model.__name__ + "_" +
-                             shortuuid.uuid()[:4], __base__=model)
+    new_model = create_model(model.__name__ + "_" + # type: ignore
+                             shortuuid.uuid()[:4], __base__=model) # type: ignore
     original_fields = new_model.__fields__.copy()
     new_fields = OrderedDict()
 
@@ -104,7 +104,7 @@ def reorder_fields(model: BaseModel, order: list) -> BaseModel:
 # I think it's fixed now. Not sure 🤷🏻‍♂️
 def auto_enum(name: str, values: list[str]) -> Enum:
     return Enum(name + "_" + shortuuid.uuid()[:4], dict(
-        zip([str(transliterate.slugify(value, language_code="ru").translate(
+        zip([str(transliterate.slugify(value, language_code="ru").translate( #type:ignore
             str.maketrans("-", "_"))) for value in values], values)
     )
     )

@@ -8,17 +8,23 @@ import motor.motor_asyncio
 import polars as pd
 import base64
 from bson.objectid import ObjectId
+from bson.raw_bson import RawBSONDocument
 from datetime import datetime, timedelta
 from application.configuration_handling import settings
-from models.waybill import Waybill 
 from pydantic import create_model
+from models.waybill import Waybill 
 from models.paper import Paper, PaperCollection 
 from models.declaration import Declaration
 from models.statement import ClearanceStatement 
+from config.validation_config import validation_logger
 
-smbclient.ClientConfig(encrypt=True,
-                       auth_protocol="kerberos",  
-                       domain_controller=settings.SMB_DOMAIN_CONTROLLER)
+try:
+    smbclient.ClientConfig(encrypt=True,
+                           auth_protocol="kerberos",  
+                           domain_controller=settings.SMB_DOMAIN_CONTROLLER)
+except:
+    smbclient = os
+    pass
 
 DeclarationUpdates = create_model(
     Declaration.__name__ + "Updates",
@@ -27,7 +33,7 @@ DeclarationUpdates = create_model(
 )
 
 def files_to_load():
-    path = pathlib.Path(settings.input_files_path)
+    path = pathlib.Path(settings.input_files_path) # type: ignore # type: ignore
     for file_ in smbclient.listdir(str(path)):
         if file_.endswith(".old.old"):
             try:
@@ -40,12 +46,12 @@ def files_to_load():
         elif file_.endswith(".old"):
                 smbclient.rename(path / file_, path / str(file_+".old"))
         else: 
-            if re.match(settings.input_files_regex, file_):
-                if re.match(settings.re_updates, file_):
+            if re.match(settings.input_files_regex, file_): # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore # type: ignore
+                if re.match(settings.re_updates, file_): # type: ignore # type: ignore
                     cls = DeclarationUpdates
-                elif re.match(settings.re_statement, file_):
+                elif re.match(settings.re_statement, file_): # type: ignore # type: ignore
                     cls = ClearanceStatement
-                elif re.match(settings.re_declaration, file_):
+                elif re.match(settings.re_declaration, file_): # type: ignore # type: ignore
                     cls = Declaration
                 elif re.match(".*ttn.*", file_):
                     cls = Waybill
@@ -59,7 +65,7 @@ def validate_rows(df: pd.DataFrame, fd, cls) -> PaperCollection:
 
     pc = list()
 
-    for index, data in df.iterrows():
+    for index, data in df.iterrows(): # type: ignore
             data = data.to_list()
             if cls is not None and issubclass(cls, Paper):
                 rw = dict(
@@ -71,20 +77,19 @@ def validate_rows(df: pd.DataFrame, fd, cls) -> PaperCollection:
                 try:
                     t = cls(**rw)
                 except ValueError as e:
-                    from cord_log import validation_logger
                     validation_logger.error(f"\n\t\tОшибки в строке номер {index + 1} файла \"{fd}\":\n\n\t{e}\nКонтекст:\n{rw}")
                 else:
                     try:
                         pc.append(t)
                     except KeyError:
                         pc = list()
-    return pc
+    return pc # type: ignore # type: ignore
 
 def load_file(fd, cls):
-    with smbclient.open_file(pathlib.Path(settings.input_files_path) / fd, mode="r", encoding="utf-8") as smb_io:
-        dialect = csv.Sniffer().sniff(sample=smb_io.readline(), delimiters=settings.csv_delimiters)
+    with smbclient.open_file(pathlib.Path(settings.input_files_path) / fd, mode="r", encoding="utf-8") as smb_io: # type: ignore
+        dialect = csv.Sniffer().sniff(sample=smb_io.readline(), delimiters=settings.csv_delimiters) # type: ignore
         smb_io.seek(0)
-        df = pd.read_csv(smb_io, header=0, index_col=False, na_filter=False, parse_dates=False, engine="c", dialect=dialect, memory_map=True)
+        df = pd.read_csv(smb_io, header=0, index_col=False, na_filter=False, parse_dates=False, engine="c", dialect=dialect, memory_map=True) # type: ignore
         print(fd, end=": \n")
     pc = list()
 
@@ -92,7 +97,7 @@ def load_file(fd, cls):
         future_to_chunk_name = {
             val_exec.submit(validate_rows, df=x, fd=fd, cls=cls):
             "#".join([str(fd),str(i)])
-            for i, x in enumerate(numpy.array_split(df.copy(), os.cpu_count()))
+            for i, x in enumerate(numpy.array_split(df.copy(), os.cpu_count())) # type: ignore
         }
         concurrent.futures.wait(future_to_chunk_name)
         for future in concurrent.futures.as_completed(future_to_chunk_name):
@@ -108,7 +113,7 @@ def load_file(fd, cls):
             except Exception as e:
                 raise ValueError(f"{e} \nError occured in chunk {chunk_name}") from e
     validation_logger.info(f"\"{fd}\" — is exhausted.")
-    fpath = str(pathlib.Path(settings.input_files_path) / fd)
+    fpath = str(pathlib.Path(settings.input_files_path) / fd) # type: ignore
     smbclient.rename(fpath, fpath+".old") # rename exhausted file
     return pc
 
@@ -116,7 +121,7 @@ result = list()
 async def insert_documents(cls_name):
     result.append(await cord_db[cls_name.lower()].insert_many(all_files_dict[cls_name]))
 
-all_files_pc = PaperCollection(paper_list=list())
+all_files_pc = PaperCollection(paper_list=list(), received_timestamp=None)
 start_from_objectid = None
 documents_to_sort = dict()
 
@@ -147,13 +152,13 @@ if len(all_files_pc.paper_list) > 0:
             asyncio.get_event_loop().run_until_complete(test(db_to_cls))
         except Exception as e:
             with open(pathlib.Path(f"./output_{datetime.now().ctime().replace(':', '-')}.json"), mode="wt", encoding="utf-8") as s:
-                all_files_pc.paper_list = [{"_id": str(ObjectId())} | v.dict() for v in all_files_pc.paper_list]
-                all_files_pc.recieved_timestamp = datetime.now()
+                all_files_pc.paper_list = [{"_id": str(ObjectId())} | v.dict() for v in all_files_pc.paper_list] #type:ignore
+                all_files_pc.received_timestamp = datetime.now() #type:ignore
                 s.write(all_files_pc.json(ensure_ascii=False))
             
-            validation_logger.error(f"При попытке подключения к базе данных произошла ошибка: \n\t\t{e}\n\n"
+            validation_logger.error(f"При попытке подключения к базе данных произошла ошибка: \n\t\t{e}\n\n" #type:ignore
                                     f"{base64.b64decode('MTk4OSBUaWFuYW5tZW4gU3F1YXJlIHByb3Rlc3RzIGFuZCBtYXNzYWNyZQo=').decode('utf-8')}\n"
-                                    f"{base64.b64decode(err).decode('utf-8').ljust(80)}"
+                                    f"{base64.b64decode(err).decode('utf-8').ljust(80)}" #type:ignore
             )
         else:
             updates = [all_files_pc.paper_list.pop(i)
@@ -164,11 +169,11 @@ if len(all_files_pc.paper_list) > 0:
             for paper_v in all_files_pc.paper_list:
                 try:
                     all_files_dict[str(type(paper_v).__name__).lower()].append(
-                        bson.raw_bson.RawBSONDocument(bsonjs.loads(paper_v.json()))
+                        RawBSONDocument(bsonjs.loads(paper_v.json()))
                     )
                 except KeyError:
                     all_files_dict[str(type(paper_v).__name__).lower(
-                    )] = [bson.raw_bson.RawBSONDocument(bsonjs.loads(paper_v.json()))]
+                    )] = [RawBSONDocument(bsonjs.loads(paper_v.json()))]
             
             loop = asyncio.get_event_loop()
 
@@ -176,7 +181,7 @@ if len(all_files_pc.paper_list) > 0:
                 loop.run_until_complete(insert_documents(cls_name=cls))
 else:
     print("warning: V41-P4553d\t\"N0n3-C4m3-0u7\"")
-    validation_logger.warning("No new records.")
+    validation_logger.warning("No new records.") #type:ignore
 
 del all_files_pc
 print("Sorting...")
@@ -209,14 +214,14 @@ if mongod_client is not None:
         DeclarationUpdates.__name__.lower(): DeclarationUpdates,
         Waybill.__name__.lower(): Waybill
     }
-    start_from_objectid = ObjectId().from_datetime(datetime.utcnow() - timedelta(days=int(settings.days_to_fetch)))
+    start_from_objectid = ObjectId().from_datetime(datetime.utcnow() - timedelta(days=int(settings.days_to_fetch))) #type:ignore
     for db in db_to_cls.keys():
-        result = loop.run_until_complete(find_documents(cls=db,
+        result = loop.run_until_complete(find_documents(cls=db, #type:ignore
                                                     out_var_name=[i for i, a in locals().items() if id(a) == id(documents_to_sort)][0],
                                                    objid=start_from_objectid)
         )
     for cls, doc_list in documents_to_sort.copy().items():
-        documents_to_sort[cls] = pd.DataFrame().from_records(
+        documents_to_sort[cls] = pd.DataFrame().from_records(#type:ignore
             [db_to_cls[cls].construct(**x).flat_values() for x in doc_list if x.pop("_id") is not None],
             columns=db_to_cls[cls].construct(**doc_list[0]).flat_keys()
         )
@@ -232,8 +237,8 @@ if mongod_client is not None:
         # COMMON
         pattern = settings.re_for_both
         df = documents_to_sort[cls][
-            documents_to_sort[cls][column].apply(
-                lambda x: True if re.search(pattern, x) else False
+            documents_to_sort[cls][column].apply( #type:ignore
+                lambda x: True if re.search(pattern, x) else False #type:ignore
             )
         ]
         try:
@@ -241,10 +246,10 @@ if mongod_client is not None:
         except KeyError: 
             ret[OUT_BOTH][cls] = df
         #import
-        pattern = settings.re_for_impdiv
+        pattern = settings.re_for_impdiv or re.Pattern()
         df = documents_to_sort[cls][
             documents_to_sort[cls][column].apply(
-                lambda x: True if re.search(pattern, x) else False
+                lambda x: True if re.search(pattern, x) else False #type:ignore
             )
         ]
         try:

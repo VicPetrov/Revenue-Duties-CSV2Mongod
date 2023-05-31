@@ -3,25 +3,24 @@ import pytest
 import datetime
 from devtools import debug
 from sys import path
-
 import os, pathlib
-os.environ["PYTHONUTF8"] = "1"
-for py in pathlib.Path().glob("**/*.py"):
-    path.insert(1, str(py.parent))
+from models.waybill import Waybill
+from models.statement import ClearanceStatement
+from models.declaration import Declaration
+from models.invoice_amount import InvoiceAmount
+from models.item import Item
 
-from waybill import Waybill
-from statement import ClearanceStatement
-from declaration import Declaration
-from invoice_amount import InvoiceAmount
- 
-def construct_declaration(_file: str = r"Source\business-logic\tests\test_line.txt") -> dict:
-    _file = open(_file, "r", encoding="utf-8")
-    test_line = [x.replace("\n", "") for x in _file]
+import application.configuration_handling
+
+def construct_declaration(_file: pathlib.Path = pathlib.Path() / "test_line.txt") -> dict:
+    opened_file = open(_file, "r", encoding="utf-8")
+    test_line = [x.replace("\n", "") for x in opened_file]
     return dict(zip(Declaration.__fields__, Declaration.group_nested(test_line)))
 
 @pytest.fixture
 def decl_test_line() -> dict:
-    return construct_declaration(_file=next(pathlib.Path().glob("**/test_line.txt")))
+    return construct_declaration(_file= list(pathlib.Path().glob("**/test_line.txt"))[0]  )
+
 @pytest.fixture
 def statement_test_line() -> dict:
     clearence_test_line = """700010000/2021/000165^12.05.2021^3049710804^ФЛП ЛАВРУШКО ЮЛИЯ АЛЕКСАНДРОВНА^ДНР 83017, город Донецк, Калининский район, улица Герцена, дом 75^^ООО "Юг Карго Дон"^Импорт^Графический планшет One by Wacom medium, Кол-во-   5 шт.; Графический планшет One by Wacom small, Кол-во – 5 шт.;Графический планшет Wacom Intuos S Black цветчерный, Кол-во – 3 шт.;Графический планшет Wacom Intuos S BluetoothBlack цвет черный, Кол-во – 2 шт.^84^70975.74^RUB^71475.74^8.75^от 10.08.2020г. до 30.12.2021 г.; № 10/08-2020^CMR от 27.04.2021 г. № 13;^от 27.04.2021 г.  № 13^Упаковочный лист № 13 от 27.04.2021г.; Дополнительное соглашение № 1 от 08,12,2020 г.; Спецификация № 1 от 23.04.2021 г.; Платежное поручение № 32 от 08.04.2021 г.; Справка о транспортных расходах № б/н от 06.05.2021г.; Карточка аккредитации № 200259 от 10.06.2020г..; Учетная карточка № 700010002/2020/1/003941 от 01.07.2020г; Свидетельство о регистрации  № 02 01 51 038611 от 12.03.2020 г.; ЭК №10323010/290421/0072480 от 29.04.2021г.; Квитанция об оплате единого сбора № 265874 от 06.05.2021 г.; Провозная ведомость №700020100/2/21/19177 от 06.05.2021г.; Лицензия ЛБ № 0045 от 31.08.2018 г., Договор поручения № 0708/20-БР от 07.08.2020 г., Трудовой договор №101201901431/3 от 20.03.2019 г.; ИНН 3355906474 от 02.07.2003 г.,^2021-05-12 16:16:30^
@@ -61,7 +60,6 @@ def test_empty_constructor():
 def test_proper_declaration(decl_test_line):
     try:
         d = Declaration(**decl_test_line)
-        from item import Item
         Item(**decl_test_line["item"])
     except Exception as e:
         assert False, str(e) + "\n"+ str(debug.format(decl_test_line))

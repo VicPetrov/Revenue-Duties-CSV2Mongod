@@ -13,8 +13,8 @@ class Entity(BaseModel):
 
 
 #Cosignor/Cosignee has a different field structure for statements and we have to reflect that in the model 
-StatementEntity = reorder_fields(model=Entity, order=["tax_payer_id", "name"]) 
-WaybillEntity = reorder_fields(model=Entity,
+StatementEntity = reorder_fields(model=Entity, order=["tax_payer_id", "name"])  # type: ignore
+WaybillEntity = reorder_fields(model=Entity, # type: ignore
                                order=[
                                    "name",
                                    "tax_payer_id",
